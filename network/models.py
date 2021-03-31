@@ -7,9 +7,10 @@ class User(AbstractUser):
 
 
 class Post(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='User')
-    text = models.CharField(max_length=400)
-    date = models.DateField(auto_now_add=True)
+    # user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='User')
+    user = models.ForeignKey(User, to_field='username', on_delete=models.CASCADE, related_name='User')
+    text = models.CharField(max_length=400, null=False)
+    date = models.DateTimeField(auto_now_add=True)
     likes = models.ManyToManyField(User, blank=True)
 
     def __str__(self):
@@ -17,16 +18,17 @@ class Post(models.Model):
 
 
 class Comment(models.Model):
-    comment = models.TextField
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="comments")
+    comment = models.TextField(null=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f'{self.user} commented in {self.post}'
 
 
 class Following(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="follows")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="follows")
     following = models.ManyToManyField(User, blank=True)
 
     def __str__(self):

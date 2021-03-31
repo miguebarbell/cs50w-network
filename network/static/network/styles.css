@@ -1,0 +1,22 @@
+body {
+    /*display: flex;*/
+    align-content: center;
+    align-items: center;
+
+}
+
+#new-post {
+    width: 50%;
+    align-items: center;
+    align-content: center;
+    padding-left: 10%;
+}
+
+#posts {
+    padding-left: 10%;
+}
+
+.post {
+    text-align: left;
+    align-content: center;
+}
