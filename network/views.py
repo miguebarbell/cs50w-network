@@ -1,17 +1,19 @@
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.core.paginator import Paginator
 # from .forms import PostForm
-from .models import User, Post
+from .models import User, Post, Profile
 import json
 from rest_framework import viewsets, generics
 from .serializers import PostSerializer
 
 
-#serializer Post
+# serializer Post
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all().order_by('id')
     serializer_class = PostSerializer
@@ -19,7 +21,7 @@ class PostViewSet(viewsets.ModelViewSet):
 
 # class PostView(generics.CreateAPIView):
 class PostView(generics.ListAPIView):
-    queryset = Post.objects.all()
+    queryset = Post.objects.all().order_by('-date')
     serializer_class = PostSerializer
 
 
@@ -43,7 +45,7 @@ def posts(request):
     # data = [f'Post #{i}' for i in range(start, end, 1)]
     data = []
     for i in range(start, end, 1):
-        #get the posts from the model
+        # get the posts from the model
         # TODO: make the python dict json object
         data.append({
             'user': {posts[i].user},
@@ -110,11 +112,52 @@ def register(request):
         try:
             user = User.objects.create_user(username, email, password)
             user.save()
+
         except IntegrityError:
             return render(request, "network/register.html", {
                 "message": "Username already taken."
             })
         login(request, user)
+        profile = Profile(user=user)
+        profile.save()
+        print(f'created {profile}')
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "network/register.html")
+
+
+def profile(request, username):
+    user_posts = Post.objects.filter(user=username).order_by('-date')
+    posts = []
+    for i in range(len(user_posts)):
+        posts.append({'date': user_posts[i].date.strftime('%H:%M %d %b %Y'), 'text': user_posts[i].text,
+                      'likes': len(user_posts[i].likes.all())})
+    status = request.user.is_authenticated
+    ###el profile que se esta visitando
+    user = User.objects.get(username=username)
+    # profile = Profile.objects.get(user=user)
+    ###el usuario q esta haciendo el requiest
+    user_profile = Profile.objects.get(user=request.user)
+    ### folling a user el que hace el request
+    # user_profile.following.add(user) #funcionando migue folling leo
+    following_status = user in user_profile.following.all()
+    print(f'{user_profile} following {user}: {user in user_profile.following.all()}')
+    followers = 0
+    for u in Profile.objects.all():
+        if user in u.following.all():
+            followers += 1
+    return JsonResponse({'followers': followers,
+                         'posts': posts,
+                         'logged': status,
+                         'following_status': following_status,
+                         'request_user': str(request.user)
+                         })
+
+
+@login_required
+@csrf_exempt
+def follow(request):
+    if request.method != 'POST':
+        return JsonResponse({"error": "POST request required."}, status=400)
+    data = json.loads(request.body)
+    follow = data.get("follow")
