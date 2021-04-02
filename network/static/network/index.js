@@ -16,15 +16,17 @@ function load() {
         .then(response => response.json())
         .then(data => {
             data.forEach(add_post);
-        })
+        });
 }
 
 
 function load_profile(username) {
+    blank_page()
     // console.log(`workin for ${username.id}`);
-    document.querySelector('#posts').style.display = 'none';
-    document.querySelector('#new-post').style.display = 'none';
+    // document.querySelector('#posts').style.display = 'none';
+    // document.querySelector('#new-post').style.display = 'none';
     div_profile = document.createElement('div');
+    div_profile.id = 'div_profile';
     document.querySelector('body').append(div_profile);
     div_profile.innerHTML = `<h1 id="username-profile">${username.id}&nbsp;&nbsp;</h1>`
     fetch(`profile/${username.id}`)
@@ -58,6 +60,16 @@ function load_profile(username) {
                     } else {
                         follow_btn.textContent = 'followed'
                     }
+                    fetch(`follow/${username.id}`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            "follow": follow
+                        })
+                    })
+                        .then(response => response.json())
+                        .then(result => {
+                            console.log(result)
+                        })
                 });
                 // TODO: hacer la funcion del botton, para el mismo elemento follow/unfollow
                 let follow
@@ -68,16 +80,16 @@ function load_profile(username) {
                     follow_btn.appendChild(document.createTextNode("follow"));
                     follow = false
                 }
-            fetch(`follow/${username.id}`, {
-                method: 'POST',
-                body: JSON.stringify({
-                    "follow": follow
-                })
-            })
-                .then(response => response.json())
-                .then(result => {
-                    console.log(result)
-                })
+            // fetch(`follow/${username.id}`, {
+            //     method: 'POST',
+            //     body: JSON.stringify({
+            //         "follow": follow
+            //     })
+            // })
+            //     .then(response => response.json())
+            //     .then(result => {
+            //         console.log(result)
+            //     })
             }
         })
 }
@@ -105,6 +117,39 @@ function add_post(post) {
     console.log(date);
     div_post.innerHTML = `<p id="${post.user}"><a href="javascript:;" onclick="load_profile(${post.user});"><strong class="username">${post.user}</strong></a> @ ${post_date} posted:</p><p class="text">${post.text}</p><p class="likes">Likes: ${likes}</p>`;
     document.querySelector('#posts').append(div_post);
+}
+
+
+function blank_page() {
+    let blank_body = document.querySelector('.body').children;
+    for (let i = 0; i < blank_body.length; i++) {
+        blank_body[i].style.display = "none";
+    }
+}
+
+
+function following_page() {
+    blank_page()
+    // let blank_body = document.querySelector('.body').children;
+    // for (i = 0; i < blank_body.length; i++) {
+    //     // blank_body[i].style.visibility = "hidden";
+    //     blank_body[i].style.display = "none";
+    // }
+    function following_posts(data) {
+        console.log(data)
+    }
+    fetch('following')
+        .then(response => response.json())
+        .then(following_data => {
+            // console.log(following_data['post']);
+            following_posts(following_data['post'])
+            // following_data['post'].forEach(following_posts);
+        });
+}
+
+
+function own_profile() {
+    console.log('funcionando')
 }
 
 

@@ -14,9 +14,9 @@ from .serializers import PostSerializer
 
 
 # serializer Post
-class PostViewSet(viewsets.ModelViewSet):
-    queryset = Post.objects.all().order_by('id')
-    serializer_class = PostSerializer
+# class PostViewSet(viewsets.ModelViewSet):
+#     queryset = Post.objects.all().order_by('id')
+#     serializer_class = PostSerializer
 
 
 # class PostView(generics.CreateAPIView):
@@ -35,27 +35,27 @@ def newpost(request):
     return render(request, "network/index.html")
 
 
-def posts(request):
-    posts = Post.objects.all()
-    p = Paginator(posts, 10)
-    start = int(request.GET.get('start') or 0)
-    end = int(request.GET.get('end') or start + 9)
-    if end > len(posts):
-        end = len(posts)
-    # data = [f'Post #{i}' for i in range(start, end, 1)]
-    data = []
-    for i in range(start, end, 1):
-        # get the posts from the model
-        # TODO: make the python dict json object
-        data.append({
-            'user': {posts[i].user},
-            'text': {posts[i].text},
-            'date': {posts[i].date},
-            'likes': {posts[i].likes}
-        })
-        # data.append(f'Post #{i} {posts[i].text} by {posts[i].user}')
-
-    return JsonResponse({"posts": json.dumps(str(data))})
+# def posts(request):
+#     posts = Post.objects.all()
+#     p = Paginator(posts, 10)
+#     start = int(request.GET.get('start') or 0)
+#     end = int(request.GET.get('end') or start + 9)
+#     if end > len(posts):
+#         end = len(posts)
+#     # data = [f'Post #{i}' for i in range(start, end, 1)]
+#     data = []
+#     for i in range(start, end, 1):
+#         # get the posts from the model
+#         # TODO: make the python dict json object
+#         data.append({
+#             'user': {posts[i].user},
+#             'text': {posts[i].text},
+#             'date': {posts[i].date},
+#             'likes': {posts[i].likes}
+#         })
+#         # data.append(f'Post #{i} {posts[i].text} by {posts[i].user}')
+#
+#     return JsonResponse({"posts": json.dumps(str(data))})
 
 
 def index(request):
@@ -179,3 +179,21 @@ def follow(request, username):
         user_profile.save()
         return JsonResponse({'status': 201, 'action': "Unfollow"})
     return JsonResponse({}, status=404)
+
+
+@login_required
+@csrf_exempt
+def following_posts(request):
+    # TODO: return all the post of following people
+    all_posts = Post.objects.all()
+    user = Profile.objects.get(user=request.user)
+    following_users = user.following.all()
+    fpost = {}
+    for user in following_users:
+        for post in all_posts:
+            if post.user == user:
+                if str(user) in fpost:
+                    fpost[str(user)].append(post.text)
+                else:
+                    fpost[str(user)] = [post.text]
+    return JsonResponse({'status': 201, 'post': fpost})
