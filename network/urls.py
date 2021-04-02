@@ -12,5 +12,6 @@ urlpatterns = [
     path("newpost", views.newpost, name="newpost"),
     path("api", views.PostView.as_view()),
     # path("api", views.PostViewSet.as_view(), name="api_post")
-    path("profile/<str:username>", views.profile, name="profile")
+    path("profile/<str:username>", views.profile, name="profile"),
+    path("follow/<str:username>", views.follow, name="follow")
 ]

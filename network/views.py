@@ -156,8 +156,26 @@ def profile(request, username):
 
 @login_required
 @csrf_exempt
-def follow(request):
+def follow(request, username):
+    print(username)
     if request.method != 'POST':
         return JsonResponse({"error": "POST request required."}, status=400)
     data = json.loads(request.body)
+    # print(f'data= {data}')
     follow = data.get("follow")
+    # print(f'follow= {follow}')
+    #procedimiento para seguir al usuario para
+    user = User.objects.get(username=username)
+    user_profile = Profile.objects.get(user=request.user)
+    if not follow:
+        user_profile.following.add(user)
+        print(f'{user_profile} following {user}')
+        user_profile.save()
+        return JsonResponse({'status': 201, 'action': "Follow"})
+    #procedimeinto para dejar de seguir
+    elif follow:
+        user_profile.following.remove(user)
+        print(f'{user_profile} unfollowing {user}')
+        user_profile.save()
+        return JsonResponse({'status': 201, 'action': "Unfollow"})
+    return JsonResponse({}, status=404)

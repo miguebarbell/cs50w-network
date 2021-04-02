@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     load()
+})
 
-    })
 
 
 // let counter = 1;
@@ -26,7 +26,7 @@ function load_profile(username) {
     document.querySelector('#new-post').style.display = 'none';
     div_profile = document.createElement('div');
     document.querySelector('body').append(div_profile);
-    div_profile.innerHTML = `<h1 id="username-profile">${username.id}</h1>`
+    div_profile.innerHTML = `<h1 id="username-profile">${username.id}&nbsp;&nbsp;</h1>`
     fetch(`profile/${username.id}`)
         .then(response => response.json())
         .then(data => {
@@ -45,17 +45,40 @@ function load_profile(username) {
             if (username.id !== data['request_user']) {
                 console.log('usuarios diferentes')
                 const follow_btn = document.createElement('button');
-                follow_btn.classList.add("btn");
+                follow_btn.id = 'follow-btn'
+                follow_btn.className = "btn btn-primary btn-sm active"
                 let username_p = document.querySelector('#username-profile');
                 username_p.appendChild(follow_btn);
+                console.log(data['following_status'])
+                follow_btn.addEventListener('click', () => {
+                    follow_btn.className = "btn btn-success btn-sm"
+                    follow_btn.classList.add('disabled')
+                    if (follow === true) {
+                        follow_btn.textContent = 'unfollowed'
+                    } else {
+                        follow_btn.textContent = 'followed'
+                    }
+                });
                 // TODO: hacer la funcion del botton, para el mismo elemento follow/unfollow
-                if (data['following_status'] == 'True') {
+                let follow
+                if (data['following_status'] == true) {
                     follow_btn.appendChild(document.createTextNode("unfollow"));
+                    follow = true
                 } else {
                     follow_btn.appendChild(document.createTextNode("follow"));
+                    follow = false
                 }
+            fetch(`follow/${username.id}`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    "follow": follow
+                })
+            })
+                .then(response => response.json())
+                .then(result => {
+                    console.log(result)
+                })
             }
-
         })
 }
 
