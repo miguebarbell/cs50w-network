@@ -46,7 +46,6 @@ def newpost(request):
 #     data = []
 #     for i in range(start, end, 1):
 #         # get the posts from the model
-#         # TODO: make the python dict json object
 #         data.append({
 #             'user': {posts[i].user},
 #             'text': {posts[i].text},
@@ -184,16 +183,18 @@ def follow(request, username):
 @login_required
 @csrf_exempt
 def following_posts(request):
-    # TODO: return all the post of following people
     all_posts = Post.objects.all()
     user = Profile.objects.get(user=request.user)
     following_users = user.following.all()
+
     fpost = {}
     for user in following_users:
         for post in all_posts:
             if post.user == user:
+                # print(len(post.likes))
+                # TODO: ver el comportamiento de la variable like cuando tenga mas likes
                 if str(user) in fpost:
-                    fpost[str(user)].append(post.text)
+                    fpost[str(user)].append({'id': post.id, 'text': post.text, 'date': post.date, 'likes': str(post.likes)})
                 else:
-                    fpost[str(user)] = [post.text]
+                    fpost[str(user)] = [{'id': post.id, 'text': post.text, 'date': post.date, 'likes': str(post.likes)}]
     return JsonResponse({'status': 201, 'post': fpost})
