@@ -14,5 +14,9 @@ urlpatterns = [
     # path("api", views.PostViewSet.as_view(), name="api_post")
     path("profile/<str:username>", views.profile, name="profile"),
     path("follow/<str:username>", views.follow, name="follow"),
-    path("following", views.following_posts)
+    path("following", views.following_posts),
+    path("get_user", views.user_requesting, name="get_user"),
+    path("edit_post", views.edit_post, name="edit_post"),
+    path("like", views.like, name="like"),
+    path("like_status", views.like_status, name="like_status")
 ]

@@ -5,7 +5,7 @@ body {
 
 }
 
-#new-post {
+#new-post, .edit-post {
     width: 50%;
     align-items: center;
     align-content: center;
@@ -21,3 +21,15 @@ body {
     align-content: center;
 }
 
+.btn-edit {
+    color: dodgerblue;
+    font-weight: bold;
+    text-decoration: underline
+
+}
+
+.btn-edit:hover {
+    color: lightskyblue;
+    cursor: pointer;
+    text-decoration: underline
+}

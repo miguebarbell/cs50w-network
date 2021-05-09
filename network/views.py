@@ -2,14 +2,12 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
-from django.core.paginator import Paginator
-# from .forms import PostForm
 from .models import User, Post, Profile
 import json
-from rest_framework import viewsets, generics
+from rest_framework import generics
 from .serializers import PostSerializer
 
 
@@ -140,7 +138,7 @@ def profile(request, username):
     ### folling a user el que hace el request
     # user_profile.following.add(user) #funcionando migue folling leo
     following_status = user in user_profile.following.all()
-    print(f'{user_profile} following {user}: {user in user_profile.following.all()}')
+    # print(f'{user_profile} following {user}: {user in user_profile.following.all()}')
     followers = 0
     for u in Profile.objects.all():
         if user in u.following.all():
@@ -156,7 +154,7 @@ def profile(request, username):
 @login_required
 @csrf_exempt
 def follow(request, username):
-    print(username)
+    # print(username)
     if request.method != 'POST':
         return JsonResponse({"error": "POST request required."}, status=400)
     data = json.loads(request.body)
@@ -168,13 +166,13 @@ def follow(request, username):
     user_profile = Profile.objects.get(user=request.user)
     if not follow:
         user_profile.following.add(user)
-        print(f'{user_profile} following {user}')
+        # print(f'{user_profile} following {user}')
         user_profile.save()
         return JsonResponse({'status': 201, 'action': "Follow"})
     #procedimeinto para dejar de seguir
     elif follow:
         user_profile.following.remove(user)
-        print(f'{user_profile} unfollowing {user}')
+        # print(f'{user_profile} unfollowing {user}')
         user_profile.save()
         return JsonResponse({'status': 201, 'action': "Unfollow"})
     return JsonResponse({}, status=404)
@@ -183,7 +181,7 @@ def follow(request, username):
 @login_required
 @csrf_exempt
 def following_posts(request):
-    all_posts = Post.objects.all()
+    all_posts = Post.objects.order_by('-date').all()
     user = Profile.objects.get(user=request.user)
     following_users = user.following.all()
 
@@ -193,8 +191,67 @@ def following_posts(request):
             if post.user == user:
                 # print(len(post.likes))
                 # TODO: ver el comportamiento de la variable like cuando tenga mas likes
+                likes = post.likes.count()
+                # print(likes)
                 if str(user) in fpost:
-                    fpost[str(user)].append({'id': post.id, 'text': post.text, 'date': post.date, 'likes': str(post.likes)})
+                    fpost[str(user)].append({'id': post.id, 'text': post.text, 'date': post.date, 'likes': likes})
                 else:
-                    fpost[str(user)] = [{'id': post.id, 'text': post.text, 'date': post.date, 'likes': str(post.likes)}]
+                    fpost[str(user)] = [{'id': post.id, 'text': post.text, 'date': post.date, 'likes': likes}]
     return JsonResponse({'status': 201, 'post': fpost})
+
+
+def user_requesting(request):
+    user = None
+    if str(request.user) != 'AnonymousUser':
+        user = str(request.user)
+    return JsonResponse({'user_requesting': user})
+
+
+@login_required
+@csrf_exempt
+def edit_post(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        post_id = data.get("id")
+        post = Post.objects.get(id=post_id)
+        post.text = data.get('text') + ' (edited)'
+        post.save()
+        return JsonResponse({'status': 201})
+
+
+@login_required
+@csrf_exempt
+def like(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        # print(data)
+        post_id = data.get("id")
+        post = Post.objects.get(id=post_id)
+        user = User.objects.get(username=request.user)
+        liked = True
+        if user in post.likes.all():
+            post.likes.remove(user)
+            liked = False
+            # print(f'{user} dont like')
+        else:
+            post.likes.add(user)
+            # print(f'{user} likes')
+        post.save()
+        likes = post.likes.count()
+        return JsonResponse({'status': 201, 'liked': liked, 'likes': likes})
+
+
+@login_required
+@csrf_exempt
+def like_status(request):
+    # print('requesting like status')
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        post_id = data.get("id")
+        # print(post_id)
+        post = Post.objects.get(id=post_id)
+        user = User.objects.get(username=request.user)
+        liked = False
+        if user in post.likes.all():
+            liked = True
+        return JsonResponse({'status': 201, 'liked': liked})
