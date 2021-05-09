@@ -14,7 +14,7 @@ Recent Post for {{ user }}
 {% block body %}
 {% if user.is_active %}
 <div id="new-post">
-    <h3>New Post</h3>
+    <br><h3>New Post</h3>
     <form method="post" action="{% url 'newpost' %}">
         {% csrf_token %}
         <textarea class="form-control" rows="5" name="post" placeholder="New Post"></textarea>
